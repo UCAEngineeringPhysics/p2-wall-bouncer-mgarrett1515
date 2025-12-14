@@ -49,7 +49,7 @@ Major required components are listed below:
     - **Read distance from ultrasonic sensor**.
     - **Send signals to motor driver board and move the robot according to the distance sensing**.
 - Upload your script to this repository.
-  '''
+```
   import utime
 from machine import Pin, PWM, Timer, reset
 from dif_drive_controller import DiffDriveController
@@ -295,7 +295,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-    '''
+```
 - Complete following tasks:
 1. (3%) Initialization (System Check).
    - (2%) Blink all LEDs with frequency of 5 Hz, lasting 2 seconds when both conditions below are satisfied.
@@ -332,19 +332,49 @@ if __name__ == "__main__":
 - Denote locations of the mounting holes.
 - Denote dimensions of the mounting holes.
 
-> [!TIP]
+> [!TIP]![base p2](https://github.com/user-attachments/assets/9b349ac3-f3a8-40bc-b98c-337066a0f343)
+![other_dimensions_p2](https://github.com/user-attachments/assets/f3f4ff4e-46c1-4b38-8832-cc73130f51c2)
+
 > - You may want to checkout TechDraw of FreeCAD. Other CAD software should have the similar tools.  
 > - Hand drawings are acceptable.
 
 #### 3.2 (10%) Wiring Diagram: attach a drawing to illustrate electrical components' wiring.
 - Specify power wires using red and black wires.
 - Mark out employed signal pins' names.
-- Electronic components' values have to match your actual circuit.
+- Electronic components' values have to match your actual circuit.![p2 wiring](https://github.com/user-attachments/assets/9d2f8f07-99b8-44a6-9a9c-7906b71af131)
+
+- 
+
 
 #### 3.3 (6%) Software Design
 Use a [flowchart](https://en.wikipedia.org/wiki/Flowchart) or a [algorithm/pseudocode table](https://www.overleaf.com/learn/latex/Algorithms) or a [itemized list](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists) to explain your wall avoidance strategy.
+State Initialization: The robot begins in NAV_STATE_FWD (Forward Mode) immediately upon entering "Work Mode".
 
+Distance Monitoring:
+
+The ultrasonic sensor continuously polls distance in real-time (every ~20ms).
+
+Filtering: Readings of None (infinity) are treated as safe (10.0m). Readings of 0.0 (noise/too close) are treated as an immediate collision danger (0.0m).
+
+Forward Motion:
+
+The robot drives straight at a set speed (0.18 m/s normally, 0.09 m/s in low battery).
+
+Transition Trigger: If the filtered distance drops below WALL_THRESHOLD (0.25 meters), the robot immediately transitions to NAV_STATE_STOP_1.
+
+Collision Avoidance Sequence:
+
+Step 1: Stop (Stabilize): The robot halts all motor movement for TIME_TO_STOP (500ms) to dissipate momentum and ensure a clean turn.
+
+Step 2: Turn (Maneuver): The robot enters NAV_STATE_TURN and performs a manual differential turn (Left Wheel Backward, Right Wheel Forward) for TIME_TO_TURN (800ms) to execute an approximately 90-degree left turn.
+
+Step 3: Stop (Stabilize): The robot halts again for TIME_TO_STOP (500ms) to prevent wheel slip before accelerating.
+
+Resume: The robot returns to NAV_STATE_FWD and resumes driving straight, repeating the cycle.
 #### 3.4 (4%) Energy Efficient Path Planning 
 > The goal is using this robot to cover a rectangle-shape area.
 > Do your research, make reasonable assumptions and propose a path pattern for the robot to follow.
-> Please state why this pattern is energy efficient.  
+> Please state why this pattern is energy efficient.
+> Proposed Path Pattern: The "Boustrophedon" (Lawnmower) Path For a rectangular-shaped area, the most energy-efficient coverage strategy is the Boustrophedon path, commonly known as the "lawnmower pattern." This involves the robot moving in long straight lines parallel to the longest side of the rectangle, turning 180 degrees (U-turn) at the boundaries, and overlapping slightly with the previous pass.
+>
+> It Minimizes Turning, Reduces Overlap, and helps maintain a Constant Velocity
